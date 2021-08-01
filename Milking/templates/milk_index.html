@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/mdb-ui-kit@3.5.0/css/mdb.min.css" rel="stylesheet" />
+    <title>🐄👉🥛</title>
+</head>
+
+<body onLoad="search_name();update_num();">
+
+    <nav class="navbar navbar-dark sticky-top bg-success">
+        <div class="container-fluid">
+            <!-- <a class="navbar-brand">🐄👉🥛</a> -->
+            <small id="scan-num" class="text-white" onclick="get_num();">扫描：000000</small>
+            <form class="d-flex input-group w-auto">
+                <input id="search-input" type="search" class="form-control rounded" placeholder="Search"
+                    aria-label="Search" aria-describedby="search-button" />
+                <input type="text" style="display:none;" /> <!-- 避免手机端搜索时页面自动刷新-->
+                <span class="input-group-text border-0 text-white" id="search-addon">
+                    <i class="fas fa-search" id="search-button" onclick="search_name();""></i>
+                </span>
+                <!-- <button id=" search-button" type="button" class="btn btn-success" onclick="search_name();">
+                        <i class="fas fa-search"></i>
+                        </button> -->
+            </form>
+        </div>
+    </nav>
+
+
+    <section class="p-1 mb-1">
+        <div class="card text-white bg-dark">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr class="table-dark">
+                                <th scope="col">#</th>
+                                <th scope="col">文件</th>
+                                <th scope="col">大小</th>
+                                <th scope="col">过期时间</th>
+                            </tr>
+                        </thead>
+                        <tbody id="result-table-tbody">
+                            <!-- <tr tabindex="0" role="button" data-mdb-toggle="popover" data-mdb-trigger="focus" title="更多信息"
+                                data-mdb-content="加入时间：2021-03-03 30:08 过期时间：2020-02-03 30:09:12">
+                                <th scope="row"><a href="baidu.com">1</a></th>
+                                <td>Mark</td>
+                                <td>Otto</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">2</th>
+                                <td>Jacob super super super long text test</td>
+                                <td>Thornton</td>
+                            </tr>
+                            <tr>
+                                <th scope="row">3</th>
+                                <td colspan="2">Larry the Bird</td>
+                            </tr> -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <div class="card-footer fixed-bottom bg-dark text-white">
+        <small id="page" class="text-muted">Last updated 3 mins ago</small>
+        <div class="btn-group btn-group-sm" role="group" aria-label="Basic example" style="float: right;">
+            <button id="first-page" type="button" class="btn btn-success"
+                onclick="search_name(change_page = 0);">首页</button>
+            <button id="last-page" type="button" class="btn btn-success"
+                onclick="search_name(change_page = -1);">上一页</button>
+            <button id="next-page" type="button" class="btn btn-success"
+                onclick="search_name(change_page = 1)">下一页</button>
+        </div>
+    </div>
+
+
+
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/mdb-ui-kit@3.5.0/js/mdb.min.js"></script>
+
+
+    <script type="text/javascript">
+        show_num = 0
+        scan_num = -100
+        function update_num() {
+            if (show_num - scan_num < 100) {
+                show_num += randomNum(4,6);
+                document.getElementById("scan-num").innerHTML = "扫描：" + show_num;
+            }
+            else {
+                get_num();
+            }
+            //every five seconds to repeat self
+            setTimeout("update_num()", 1000);
+        }
+
+        function get_num() {
+            var req = new XMLHttpRequest();
+
+            req.onreadystatechange = function () {
+                if (req.readyState == 4 && req.status == 200) {
+                    var str = req.responseText;//获取到json字符串，还需解析
+                    var json = JSON.parse(str);//转为json
+                    document.getElementById("scan-num").innerHTML = "扫描：" + json["scan_num"];
+                    scan_num = json["scan_num"];
+                    show_num = json["scan_num"]
+                }
+            }
+            req.open('POST', '/milk', true);
+            req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+            req.send("get_num=1");
+        }
+
+        //生成从minNum到maxNum的随机数
+        function randomNum(minNum, maxNum) {
+            switch (arguments.length) {
+                case 1:
+                    return parseInt(Math.random() * minNum + 1, 10);
+                    break;
+                case 2:
+                    return parseInt(Math.random() * (maxNum - minNum + 1) + minNum, 10);
+                    break;
+                default:
+                    return 0;
+                    break;
+            }
+        }
+    </script>
+
+
+    <script type="text/javascript">
+        var input = document.getElementById("search-input");
+        input.addEventListener("keyup", function (event) {
+            event.preventDefault();
+            if (event.keyCode === 13) {
+                search_name();
+            }
+        });
+    </script>
+
+    <script type="text/javascript">
+        var page = 1;
+        function search_name(change_page = 0) {
+            var new_page = page;
+            const searchInput = document.getElementById('search-input');
+            const inputValue = searchInput.value;
+            var req = new XMLHttpRequest();
+            var result = document.getElementById('result');
+            switch (change_page) {
+                case 0:
+                    page = 1;
+                    new_page = 1;
+                    break;
+                default:
+                    new_page = new_page + change_page
+                    if (new_page < 1) {
+                        new_page = 1
+                    }
+                    break;
+            }
+
+
+            req.onreadystatechange = function () {
+                if (req.readyState == 4 && req.status == 200) {
+                    var str = req.responseText;//获取到json字符串，还需解析
+                    var json = JSON.parse(str);//转为json
+                    const result_table = document.getElementById('result-table-tbody');
+                    var div_content = "";
+                    var item = "";
+                    if (json["length"] == 0) {
+                        alert("找不到相关文件")
+                    }
+                    else {
+                        for (var i = 0; i < json["length"]; i++) {
+                            item = '<tr class="table-dark">';
+                            item += '<th scope="row">'
+                                + '<a class="link-success" target="_blank" href="https://cowtransfer.com/s/'
+                                + json["result"][i]['uniqueUrl']
+                                + '">'
+                                + json["result"][i]['tempCode']
+                                + '</a></th>';
+                            item += '<td>';
+                            // item += '<div class="btn-group shadow-0">'
+                            //     + '<button type="button" class="btn btn-light dropdown-toggle" data-mdb-toggle="dropdown" aria-expanded="false">'
+                            //     + json["result"][i]['fileName']
+                            //     + '</button>'
+                            //     + '<ul class="dropdown-menu dropdown-menu-dark">'
+                            //     + '<li><a class="dropdown-item" href="#">Action</a></li>'
+                            //     + '<li><a class="dropdown-item active" href="#">Another action</a></li>'
+                            //     + '<li><a class="dropdown-item" href="#">Something else here</a></li>'
+                            //     + '</ul>'
+                            //     + '</div>'
+                            item += json["result"][i]['fileName'];
+                            item += '</td>';
+                            item += '<td>' + json["result"][i]['totalSizeByte'] + '</td>';
+                            item += '<td>' + json["result"][i]["expireAt"] + '</td>';
+                            item += '</tr>';
+
+                            div_content += item;
+                        }
+                        //div_content += '<div class="card mb-3 scrolltable text-white bg-primary" style="max-width: 80rem;"><div class="card-header">广告位</div><div class="card-body"><h5 class="card-title">出售宿舍路由器</h5><p class="card-text">型号：网件 WNDR4300<br>售价：￥50+10（安装费）<br>有意者联系📞15155425372</p></div></div>'
+                        result_table.innerHTML = div_content;
+                        page = new_page;
+                    }
+                    document.getElementById("page").innerHTML = "第" + page + "页"
+                }
+            }
+            req.open('POST', '/milk', true);
+            req.setRequestHeader('content-type', 'application/x-www-form-urlencoded;charset=UTF-8');
+            req.send("input=" + inputValue + "&" + "page=" + new_page);
+        }
+    </script>
+
+
+
+
+</body>
+
+</html>
